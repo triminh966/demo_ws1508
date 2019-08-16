@@ -1,0 +1,13 @@
+dev:
+  region: eu-west-1
+  process-bucket: demo-process
+  update-version-bucket: demo-update-version
+  get-version-bucket: demo-get-version
+  notify-bucket: demo-notify
+
+prod:
+  region: eu-west-1
+  process-bucket: demo-process
+  update-version-bucket: demo-update-version
+  get-version-bucket: demo-get-version
+  notify-bucket: demo-notify

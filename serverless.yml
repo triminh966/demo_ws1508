@@ -1,0 +1,113 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: demo-donetcore
+app: demo-ws1508
+tenant: triminh1992
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: dotnetcore2.1
+  VERSION_DYNAMODB_TABLE: "Version"
+
+# you can overwrite defaults here
+  stage: dev
+  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+   - Effect: "Allow"
+     Action:
+       - "s3:ListBucket"
+     Resource: "*"
+   - Effect: "Allow"
+     Action:
+       - s3:*
+       - dynamodb:DescribeTable
+       - dynamodb:Query
+       - dynamodb:Scan
+       - dynamodb:GetItem
+       - dynamodb:PutItem
+       - dynamodb:UpdateItem
+       - dynamodb:DeleteItem
+       - dunamodb:GetRecords
+       - dynamodb:GetShardIterator
+       - dynamodb:DescribeStream
+       - dynamodb:ListStreams
+     Resource: "*"
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+package:
+  individually: true
+  artifact: bin/release/netcoreapp2.1/deployment.zip
+
+functions:
+  process:
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Process
+    events:
+  get-version:
+    handler: CsharpHandlers::AWSVersion.Version::GetVersion
+    events:
+  update-version:
+    handler: CsharpHandlers::AWSVersion.Version::UpdateVersion
+    events:
+  notify:
+    handler: CsharpHandlers::AWSVersion.Version::NotifyStream
+    events:
+  ws-connect:
+    handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Connect
+    events:
+      - websocket:
+          route: $connect
+  ws-disconnect:
+    handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Disconnect
+    events:
+      - websocket:
+          route: $disconnect
+resources:
+  Resources:
+    VersionTable:
+       Type: 'AWS::DynamoDB::Table'
+       DeletionPolicy: Retain 
+       Properties:
+         AttributeDefinitions:
+           - AttributeName: id
+             AttributeType: S
+         KeySchema:
+           - AttributeName: id
+             KeyType: HASH
+         ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+         TableName: "Version"
+    WSConnectionTable:
+       Type: 'AWS::DynamoDB::Table'
+       DeletionPolicy: Retain 
+       Properties:
+         AttributeDefinitions:
+           - AttributeName: connectionId
+             AttributeType: S
+         KeySchema:
+           - AttributeName: connectionId
+             KeyType: HASH
+         ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+         TableName: "WSConnection"
