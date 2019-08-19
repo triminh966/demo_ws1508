@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Services;
+using DataModels;
 using Models;
 using Amazon.Lambda.Core;
 
@@ -8,16 +8,16 @@ namespace AWSVersion
 {
     public class Version
     {
-        private DynamoDBContext service = DynamoDBContext.Instance;
+        private VersionDataModel vm = new VersionDataModel();
         public void UpdateVersion(VersionModel version)
         {
             LambdaLogger.Log("Recived object version: " + version.version);
-            service.WriteAsync(version);
+            vm.updateVersion(version);
         }
 
         public async Task<VersionModel> GetVersion(int version) 
         {
-            return await service.GetAsync(version);
+            return await vm.getVersion(version);
         }
 
         public void NotifyStream()

@@ -6,7 +6,7 @@ using Models;
 
 namespace Services
 {
-    public class DynamoDBContextService : IDynamoDbContextInterface<T>
+    public class DynamoDBContextService : IDynamoDbContextInterface
     {
         private static Amazon.DynamoDBv2.DataModel.DynamoDBContext context;
         private static DynamoDBContextService instance;
@@ -45,11 +45,13 @@ namespace Services
             }
         }
 
-        public async void SetAsync<T>(T item)
+        public async Task<T> SetAsync<T>(T item)
         {
             try
             {
                 await context.SaveAsync<T>(item);
+                return item;
+
             }
             catch (Exception ex)
             {
@@ -57,11 +59,12 @@ namespace Services
             }
         }
 
-        public async void DeleteAsync<T>(T item)
+        public async Task<T> DeleteAsync<T>(T item)
         {
             try
             {
                 await context.DeleteAsync(item);
+                return item;
             }
             catch (Exception ex)
             {

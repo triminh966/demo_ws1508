@@ -1,7 +1,6 @@
-namespace Constants
+
+public class Constants
 {
-    public class VersionConstant
-    {
-        public string VERSION_TABLE = "Version";
-    }
+    public const string VERSION_TABLE = "Version";
+    public const string WS_TABLE = "WSConnetion";
 }

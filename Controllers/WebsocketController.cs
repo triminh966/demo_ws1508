@@ -1,37 +1,30 @@
-using Amazon.Lambda;
-using Amazon.DynamoDBv2.Model;
-using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using DataModels;
+using Models;
 
 namespace DemoWebsocket
 {
     public class AWSWebsocket
     {
-        IAmazonDynamoDB ddbClient = new AmazonDynamoDBClient();
+        private WebsocketDataModel wsdm = new WebsocketDataModel();
+        
         public async Task<APIGatewayProxyResponse> Connect(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            LambdaLogger.Log(JObject.FromObject(request).ToString());
             try
             {
                 var connectionId = request.RequestContext.ConnectionId;
-                LambdaLogger.Log("ConnectionId:" + connectionId);
-                Dictionary<string, AttributeValue> attributes = new Dictionary<string, AttributeValue>();
-                attributes["connectionIdc"] = new AttributeValue
-                {
-                    S = connectionId
-                };
-                PutItemRequest ddbRequest = new PutItemRequest()
-                {
-                    TableName = "WsConnection",
-                    Item = attributes
-                };
-                await ddbClient.PutItemAsync(ddbRequest);
+                var requestBody = JObject.FromObject(request).ToString();
+                
+                WSConnection wsData = new WSConnection();
+                wsData.connectionId = connectionId;
+                wsData.requestBody = requestBody;
+
+                await wsdm.connect(wsData);
+                
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = 200,
