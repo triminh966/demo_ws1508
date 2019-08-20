@@ -33,10 +33,10 @@ provider:
    - Effect: "Allow"
      Action:
        - "s3:ListBucket"
+       - "s3:CreateBucket"
      Resource: "*"
    - Effect: "Allow"
      Action:
-       - s3:*
        - dynamodb:DescribeTable
        - dynamodb:Query
        - dynamodb:Scan
@@ -44,7 +44,7 @@ provider:
        - dynamodb:PutItem
        - dynamodb:UpdateItem
        - dynamodb:DeleteItem
-       - dunamodb:GetRecords
+       - dynamodb:GetRecords
        - dynamodb:GetShardIterator
        - dynamodb:DescribeStream
        - dynamodb:ListStreams
@@ -85,7 +85,7 @@ resources:
   Resources:
     VersionTable:
        Type: 'AWS::DynamoDB::Table'
-       DeletionPolicy: Retain 
+       DeletionPolicy: Retain
        Properties:
          AttributeDefinitions:
            - AttributeName: id
@@ -99,7 +99,7 @@ resources:
          TableName: "Version"
     WSConnectionTable:
        Type: 'AWS::DynamoDB::Table'
-       DeletionPolicy: Retain 
+       DeletionPolicy: Retain
        Properties:
          AttributeDefinitions:
            - AttributeName: connectionId
