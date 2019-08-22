@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Models;
+using System.Collections.Generic;
 
 namespace Services
 {
@@ -56,6 +56,18 @@ namespace Services
             catch (Exception ex)
             {
                 throw new Exception($"Amazon error in Write operation! Error: {ex}");
+            }
+        }
+
+        public async Task<List<T>> ScanAsync<T>(List<ScanCondition> item)
+        {
+            try
+            {
+                return await context.ScanAsync<T>(item).GetRemainingAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Amazon error in Scan operation! Error: {ex}");
             }
         }
 
