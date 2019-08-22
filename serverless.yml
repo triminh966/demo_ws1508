@@ -72,7 +72,7 @@ functions:
     handler: CsharpHandlers::AWSVersion.Version::NotifyStream
     events:
   ws-connect:
-    handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Connect
+    handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Subcribe
     events:
       - websocket:
           route: $connect
@@ -81,6 +81,11 @@ functions:
     events:
       - websocket:
           route: $disconnect
+  broadcast:
+     handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Broadcast
+     events:
+      - websocket:
+          route: broadcast   
 resources:
   Resources:
     VersionTable:

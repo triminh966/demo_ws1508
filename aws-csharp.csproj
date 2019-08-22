@@ -13,6 +13,7 @@
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
     <PackageReference Include="Amazon.Lambda.S3Events" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.3.0" />
+    <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.3.100.65" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.55" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="ObjectDumper.NET" Version="2.4.19218.1" />
