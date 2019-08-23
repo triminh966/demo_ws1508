@@ -157,8 +157,24 @@ namespace DemoWebsocket
             }
         }
 
-        public void Disconnect()
+
+        private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
+
+        public Task StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
         {
+            LambdaLogger.Log(JObject.FromObject(dynamoEvent).ToString());
+            LambdaLogger.Log(JObject.FromObject(context).ToString());
+
+            return Task.CompletedTask;
+        }
+
+        private static string SerializeStreamRecord(StreamRecord streamRecord)
+        {
+            using (var writer = new StringWriter())
+            {
+                JsonSerializer.Serialize(writer, streamRecord);
+                return writer.ToString();
+            }
         }
     }
 }

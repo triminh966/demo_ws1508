@@ -61,16 +61,13 @@ package:
 functions:
   process:
     handler: CsharpHandlers::AwsDotnetCsharp.Handler::Process
-    events:
   get-version:
     handler: CsharpHandlers::AWSVersion.Version::GetVersion
-    events:
+
   update-version:
     handler: CsharpHandlers::AWSVersion.Version::UpdateVersion
-    events:
   notify:
     handler: CsharpHandlers::AWSVersion.Version::NotifyStream
-    events:
   ws-connect:
     handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Subcribe
     events:
@@ -85,7 +82,9 @@ functions:
      handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::Broadcast
      events:
       - websocket:
-          route: broadcast   
+          route: broadcast
+  stream-handling:
+    handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::StreamReceiver
 resources:
   Resources:
     VersionTable:
