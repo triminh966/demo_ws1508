@@ -4,3 +4,5 @@ namespace Services
     {
         public void getConfig()
         {}
+    }
+}

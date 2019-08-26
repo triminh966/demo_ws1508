@@ -3,6 +3,8 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.Runtime;
+using Amazon.Lambda.DynamoDBEvents;
+using Amazon.DynamoDBv2.Model;
 using System;
 using System.IO;
 using System.Text;
@@ -12,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using DataModels;
 using Models;
+using System.Collections.Generic;
 
 namespace DemoWebsocket
 {
@@ -70,48 +73,7 @@ namespace DemoWebsocket
                     ServiceURL = endpoint
                 });
 
-                var count = 0;
-                foreach (var item in scanResponse)
-                {
-                    var connectionId = item.connectionId;
-                    var postConnectionRequest = new PostToConnectionRequest
-                    {
-                        ConnectionId = connectionId,
-                        Data = stream
-                    };
-
-                    try
-                    {
-                        context.Logger.LogLine($"Post to connection {count}: {connectionId}");
-                        stream.Position = 0;
-                        await apiClient.PostToConnectionAsync(postConnectionRequest);
-                        count++;
-                    }
-                    catch (AmazonServiceException e)
-                    {
-                        // API Gateway returns a status of 410 GONE when the connection is no
-                        // longer available. If this happens, we simply delete the identifier
-                        // from our DynamoDB table.
-                        if (e.StatusCode == HttpStatusCode.Gone)
-                        {
-                            var wsConnection = new WSConnection();
-                            wsConnection.connectionId = connectionId;
-                            context.Logger.LogLine($"Deleting gone connection: {connectionId}");
-                            await wsdm.deleteSubcriber(wsConnection);
-                        }
-                        else
-                        {
-                            context.Logger.LogLine($"Error posting message to {connectionId}: {e.Message}");
-                            context.Logger.LogLine(e.StackTrace);
-                        }
-                    }
-                }
-
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = 200,
-                    Body = "Connected."
-                };
+                return await _broadcast(scanResponse, apiClient);
             }
             catch (Exception e)
             {
@@ -157,24 +119,61 @@ namespace DemoWebsocket
             }
         }
 
-
-        private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
-
-        public Task StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
+        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client)
         {
-            LambdaLogger.Log(JObject.FromObject(dynamoEvent).ToString());
-            LambdaLogger.Log(JObject.FromObject(context).ToString());
+            var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes("Hello from the other side"));
+            var count = 0;
+                foreach (var item in list)
+                {
+                    var connectionId = item.connectionId;
+                    var postConnectionRequest = new PostToConnectionRequest
+                    {
+                        ConnectionId = connectionId,
+                        Data = stream
+                    };
 
-            return Task.CompletedTask;
+                    try
+                    {
+                        LambdaLogger.Log($"Post to connection {count}: {connectionId}");
+                        stream.Position = 0;
+                        await client.PostToConnectionAsync(postConnectionRequest);
+                        count++;
+                    }
+                    catch (AmazonServiceException e)
+                    {
+                        // API Gateway returns a status of 410 GONE when the connection is no
+                        // longer available. If this happens, we simply delete the identifier
+                        // from our DynamoDB table.
+                        if (e.StatusCode == HttpStatusCode.Gone)
+                        {
+                            var wsConnection = new WSConnection();
+                            wsConnection.connectionId = connectionId;
+                            LambdaLogger.Log($"Deleting gone connection: {connectionId}");
+                            await wsdm.deleteSubcriber(wsConnection);
+                        }
+                        else
+                        {
+                            LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}");
+                            LambdaLogger.Log(e.StackTrace);
+                        }
+                    }
+                }
+                
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = 200,
+                    Body = "Connected."
+                };
         }
-
-        private static string SerializeStreamRecord(StreamRecord streamRecord)
+         
+        public async Task<APIGatewayProxyResponse> StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
         {
-            using (var writer = new StringWriter())
-            {
-                JsonSerializer.Serialize(writer, streamRecord);
-                return writer.ToString();
-            }
+            var scanResponse = await wsdm.scanAllSubcribers();
+                var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
+                {
+                    ServiceURL = "hhtps://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev/"
+                });
+            return await _broadcast(scanResponse, apiClient);
         }
     }
 }
