@@ -87,13 +87,13 @@ functions:
     handler: CsharpHandlers::DemoWebsocket.AWSWebsocket::StreamReceiver
 resources:
   Resources:
-    VersionTable:
+    Version:
        Type: 'AWS::DynamoDB::Table'
        DeletionPolicy: Retain
        Properties:
          AttributeDefinitions:
            - AttributeName: id
-             AttributeType: S
+             AttributeType: N
          KeySchema:
            - AttributeName: id
              KeyType: HASH

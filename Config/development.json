@@ -1,0 +1,6 @@
+{
+    "websocket": {
+        "wsUrl": "unsafe:wss://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev",
+        "connectionUrl": "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev/"
+    }
+}
