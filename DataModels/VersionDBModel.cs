@@ -9,19 +9,19 @@ namespace DataModels
         public const string TABLE_NAME = Constants.VERSION_TABLE;
         private DynamoDBContextService versionContext = DynamoDBContextService.Instance;
 
-        public Task<VersionModel> getVersion(int id)
+        public Task<ApplicationVersion> getVersion(int id)
         {
-            return versionContext.GetByIdAsync<VersionModel>(id);
+            return versionContext.GetByIdAsync<ApplicationVersion>(id);
         }
 
-        public Task<VersionModel> updateVersion(VersionModel vm)
+        public Task<ApplicationVersion> updateVersion(ApplicationVersion vm)
         {
-            return versionContext.SetAsync<VersionModel>(vm);
+            return versionContext.SetAsync<ApplicationVersion>(vm);
         }
 
-        public Task<VersionModel> deleteVersion(VersionModel vm)
+        public Task<ApplicationVersion> deleteVersion(ApplicationVersion vm)
         {
-            return versionContext.DeleteAsync<VersionModel>(vm);
+            return versionContext.DeleteAsync<ApplicationVersion>(vm);
         }
     }
 }
