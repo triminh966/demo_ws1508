@@ -123,56 +123,56 @@ namespace DemoWebsocket
         {
             var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes("Hello from the other side"));
             var count = 0;
-                foreach (var item in list)
+            foreach (var item in list)
+            {
+                var connectionId = item.connectionId;
+                var postConnectionRequest = new PostToConnectionRequest
                 {
-                    var connectionId = item.connectionId;
-                    var postConnectionRequest = new PostToConnectionRequest
-                    {
-                        ConnectionId = connectionId,
-                        Data = stream
-                    };
+                    ConnectionId = connectionId,
+                    Data = stream
+                };
 
-                    try
+                try
+                {
+                    LambdaLogger.Log($"Post to connection {count}: {connectionId}");
+                    stream.Position = 0;
+                    await client.PostToConnectionAsync(postConnectionRequest);
+                    count++;
+                }
+                catch (AmazonServiceException e)
+                {
+                    // API Gateway returns a status of 410 GONE when the connection is no
+                    // longer available. If this happens, we simply delete the identifier
+                    // from our DynamoDB table.
+                    if (e.StatusCode == HttpStatusCode.Gone)
                     {
-                        LambdaLogger.Log($"Post to connection {count}: {connectionId}");
-                        stream.Position = 0;
-                        await client.PostToConnectionAsync(postConnectionRequest);
-                        count++;
+                        var wsConnection = new WSConnection();
+                        wsConnection.connectionId = connectionId;
+                        LambdaLogger.Log($"Deleting gone connection: {connectionId}");
+                        await wsdm.deleteSubcriber(wsConnection);
                     }
-                    catch (AmazonServiceException e)
+                    else
                     {
-                        // API Gateway returns a status of 410 GONE when the connection is no
-                        // longer available. If this happens, we simply delete the identifier
-                        // from our DynamoDB table.
-                        if (e.StatusCode == HttpStatusCode.Gone)
-                        {
-                            var wsConnection = new WSConnection();
-                            wsConnection.connectionId = connectionId;
-                            LambdaLogger.Log($"Deleting gone connection: {connectionId}");
-                            await wsdm.deleteSubcriber(wsConnection);
-                        }
-                        else
-                        {
-                            LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}");
-                            LambdaLogger.Log(e.StackTrace);
-                        }
+                        LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}");
+                        LambdaLogger.Log(e.StackTrace);
                     }
                 }
-                
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = 200,
-                    Body = "Connected."
-                };
+            }
+
+            return new APIGatewayProxyResponse
+            {
+                StatusCode = 200,
+                Body = "Connected."
+            };
         }
-         
+
         public async Task<APIGatewayProxyResponse> StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
         {
             var scanResponse = await wsdm.scanAllSubcribers();
-                var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
-                {
-                    ServiceURL = "hhtps://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev/"
-                });
+            var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
+            {
+                ServiceURL = "hhtps://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev/"
+            });
             return await _broadcast(scanResponse, apiClient);
         }
     }
