@@ -1,13 +1,16 @@
 using Amazon.DynamoDBv2.DataModel;
 
-namespace Models 
+namespace Models
 {
-     [DynamoDBTable("Version")]
-    public class VersionModel 
+    [DynamoDBTable("Version")]
+    public class ApplicationVersion
     {
         [DynamoDBHashKey]
         public int id { get; set; }
 
-        public string version { get; set; }  
+        [DynamoDBHashKey]
+        public string applicationId { get; set; }
+
+        public string version { get; set; }
     }
 }

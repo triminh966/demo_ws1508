@@ -171,7 +171,7 @@ namespace DemoWebsocket
             var scanResponse = await wsdm.scanAllSubcribers();
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
-                ServiceURL = "hhtps://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev/"
+                ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
             });
             return await _broadcast(scanResponse, apiClient);
         }
