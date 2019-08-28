@@ -1,4 +1,3 @@
-using System;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.ApiGatewayManagementApi;
@@ -22,7 +21,7 @@ namespace DemoWebsocket
     public class AWSWebsocket
     {
         private WebsocketDataModel wsdm = new WebsocketDataModel();
-        private VersionDBModel vdm = new VersionDBModel();
+        private VersionDataModel vdm = new VersionDataModel();
 
         public async Task<APIGatewayProxyResponse> Subcribe(APIGatewayProxyRequest request, ILambdaContext context)
         {
@@ -66,16 +65,14 @@ namespace DemoWebsocket
                 LambdaLogger.Log("API Gateway management endpoint:" + endpoint);
                 var message = JsonConvert.DeserializeObject<JObject>(request.Body);
                 var data = message["data"]?.ToString();
-
                 var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes(data));
-
                 var scanResponse = await wsdm.scanAllSubcribers();
                 var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
                 {
                     ServiceURL = endpoint
                 });
 
-                return await _broadcast(scanResponse, apiClient);
+                return await _broadcast(scanResponse, apiClient, stream);
             }
             catch (Exception e)
             {
@@ -121,9 +118,8 @@ namespace DemoWebsocket
             }
         }
 
-        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client, ApplicationVersion version)
+        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client,MemoryStream stream)
         {
-            var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes("Hello from the other side"));
             var count = 0;
             foreach (var item in list)
             {
@@ -171,29 +167,21 @@ namespace DemoWebsocket
         public async Task<APIGatewayProxyResponse> StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
         {
             var scanResponse = await wsdm.scanAllSubcribers();
+            var appVersion = await _getApplicationVersion(dynamoEvent);
+            var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes(JObject.FromObject(appVersion).ToString(Newtonsoft.Json.Formatting.None)));
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
                 ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
             });
-            return await _broadcast(scanResponse, apiClient);
-        }
-
-        public async Task<APIGatewayProxyResponse> StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
-        {
-            var scanResponse = await wsdm.scanAllSubcribers();
-            var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
-            {
-                ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
-            });
-            return await _broadcast(scanResponse, apiClient);
+            return await _broadcast(scanResponse, apiClient, stream);
         }
 
         private async Task<ApplicationVersion> _getApplicationVersion(DynamoDBEvent dEvent)
         {
             try
             {
-                var eventObject = JObject.Parse(dEvent);
-                var versionId = Int32.Parse(eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
+                var eventObject = JObject.Parse(dEvent.ToString());
+                var versionId = Int32.Parse((string)eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
                 LambdaLogger.Log("Version id: " + versionId);
 
                 return await vdm.getVersion(versionId);
