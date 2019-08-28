@@ -1,3 +1,4 @@
+using System;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.ApiGatewayManagementApi;
@@ -21,6 +22,7 @@ namespace DemoWebsocket
     public class AWSWebsocket
     {
         private WebsocketDataModel wsdm = new WebsocketDataModel();
+        private VersionDBModel vdm = new VersionDBModel();
 
         public async Task<APIGatewayProxyResponse> Subcribe(APIGatewayProxyRequest request, ILambdaContext context)
         {
@@ -119,7 +121,7 @@ namespace DemoWebsocket
             }
         }
 
-        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client)
+        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client, ApplicationVersion version)
         {
             var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes("Hello from the other side"));
             var count = 0;
@@ -174,6 +176,22 @@ namespace DemoWebsocket
                 ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
             });
             return await _broadcast(scanResponse, apiClient);
+        }
+
+        private async Task<ApplicationVersion> _getApplicationVersion(DynamoDBEvent event)
+        {
+            try 
+            {
+                var eventObject = JObject.Parse(event);
+                var versionId = Int32.Parse(eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
+                LambdaLogger.Log("Version id: " + versionId);
+
+                return await vdm.getVersion(versionId);
+            } catch (Exception e)
+            {
+                LambdaLogger.Log("Error when get Application version: " + e.Message);
+                return null;
+            }
         }
     }
 }
