@@ -178,16 +178,27 @@ namespace DemoWebsocket
             return await _broadcast(scanResponse, apiClient);
         }
 
-        private async Task<ApplicationVersion> _getApplicationVersion(DynamoDBEvent event)
+        public async Task<APIGatewayProxyResponse> StreamReceiver(DynamoDBEvent dynamoEvent, ILambdaContext context)
         {
-            try 
+            var scanResponse = await wsdm.scanAllSubcribers();
+            var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
-                var eventObject = JObject.Parse(event);
+                ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
+            });
+            return await _broadcast(scanResponse, apiClient);
+        }
+
+        private async Task<ApplicationVersion> _getApplicationVersion(DynamoDBEvent dEvent)
+        {
+            try
+            {
+                var eventObject = JObject.Parse(dEvent);
                 var versionId = Int32.Parse(eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
                 LambdaLogger.Log("Version id: " + versionId);
 
                 return await vdm.getVersion(versionId);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 LambdaLogger.Log("Error when get Application version: " + e.Message);
                 return null;
