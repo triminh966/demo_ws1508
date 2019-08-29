@@ -94,11 +94,7 @@ resources:
          AttributeDefinitions:
            - AttributeName: id
              AttributeType: N
-           - AttributeName: applicationId
-             AttributeType: S
          KeySchema:
-           - AttributeName: id
-             KeyType: HASH
            - AttributeName: id
              KeyType: HASH
          ProvisionedThroughput:
