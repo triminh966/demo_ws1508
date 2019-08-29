@@ -202,6 +202,8 @@ namespace DemoWebsocket
             }
         }
 
+        private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
+
         private string SerializeObject(object streamRecord)
         {
             using (var ms = new MemoryStream())
