@@ -118,7 +118,7 @@ namespace DemoWebsocket
             }
         }
 
-        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client,MemoryStream stream)
+        private async Task<APIGatewayProxyResponse> _broadcast(List<WSConnection> list, AmazonApiGatewayManagementApiClient client, MemoryStream stream)
         {
             var count = 0;
             foreach (var item in list)
@@ -180,16 +180,34 @@ namespace DemoWebsocket
         {
             try
             {
-                var eventObject = JObject.Parse(dEvent.ToString());
-                var versionId = Int32.Parse((string)eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
-                LambdaLogger.Log("Version id: " + versionId);
+                var record = dEvent.Records[0];
 
-                return await vdm.getVersion(versionId);
+                    Console.WriteLine($"Event ID: {record.EventID}");
+                    Console.WriteLine($"Event Name: {record.EventName}");
+
+                    string streamRecordJson = SerializeObject(record.Dynamodb);
+                    Console.WriteLine($"DynamoDB Record:");
+                    Console.WriteLine(streamRecordJson);
+
+                // var eventObject = JObject.Parse(dEvent.ToString());
+                // var versionId = Int32.Parse((string)eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
+                // LambdaLogger.Log("Version id: " + versionId);
+
+                return await vdm.getVersion(1);
             }
             catch (Exception e)
             {
                 LambdaLogger.Log("Error when get Application version: " + e.Message);
                 return null;
+            }
+        }
+
+        private string SerializeObject(object streamRecord)
+        {
+            using (var ms = new MemoryStream())
+            {
+                _jsonSerializer.Serialize(streamRecord, ms);
+                return Encoding.UTF8.GetString(ms.ToArray());
             }
         }
     }

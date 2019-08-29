@@ -8,7 +8,6 @@ namespace Models
         [DynamoDBHashKey]
         public int id { get; set; }
 
-        [DynamoDBHashKey]
         public string applicationId { get; set; }
 
         public string version { get; set; }
