@@ -4,7 +4,6 @@ using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.Runtime;
 using Amazon.Lambda.DynamoDBEvents;
-using Amazon.DynamoDBv2.Model;
 using System;
 using System.IO;
 using System.Text;
@@ -139,6 +138,7 @@ namespace DemoWebsocket
                 }
                 catch (AmazonServiceException e)
                 {
+                    LambdaLogger.Log($"Connection had appeared to have a problem! " + e.StatusCode);
                     // API Gateway returns a status of 410 GONE when the connection is no
                     // longer available. If this happens, we simply delete the identifier
                     // from our DynamoDB table.
@@ -151,8 +151,12 @@ namespace DemoWebsocket
                     }
                     else
                     {
-                        LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}");
+                        var wsConnection = new WSConnection();
+                        wsConnection.connectionId = connectionId;
+                        LambdaLogger.Log($"Deleting invalid connection: {connectionId}");
+                        await wsdm.deleteSubcriber(wsConnection);
                         LambdaLogger.Log(e.StackTrace);
+                        //LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}"); 
                     }
                 }
             }
@@ -168,7 +172,10 @@ namespace DemoWebsocket
         {
             var scanResponse = await wsdm.scanAllSubcribers();
             var appVersion = await _getApplicationVersion(dynamoEvent);
-            var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes(JObject.FromObject(appVersion).ToString(Newtonsoft.Json.Formatting.None)));
+            var appVersionS = JObject.FromObject(appVersion).ToString();
+            LambdaLogger.Log("App version: " + appVersionS);
+            var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes(appVersionS));
+
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
                 ServiceURL = "https://2sqw2e9fz6.execute-api.us-east-1.amazonaws.com/dev"
@@ -182,18 +189,30 @@ namespace DemoWebsocket
             {
                 var record = dEvent.Records[0];
 
-                    Console.WriteLine($"Event ID: {record.EventID}");
-                    Console.WriteLine($"Event Name: {record.EventName}");
+                Console.WriteLine($"Event ID: {record.EventID}");
+                Console.WriteLine($"Event Name: {record.EventName}");
 
-                    string streamRecordJson = SerializeObject(record.Dynamodb);
-                    Console.WriteLine($"DynamoDB Record:");
-                    Console.WriteLine(streamRecordJson);
+                var element = record.Dynamodb.NewImage;
+                var versionId = -1;
+
+                foreach (var item in element)
+                {
+                    var key = item.Key;
+                    var value = item.Value;
+
+                    if (key == "id")
+                    {
+                        versionId = Int32.Parse(value.N);
+                    }
+                }
+                Console.WriteLine($"DynamoDB Record:");
+                Console.WriteLine(versionId);
 
                 // var eventObject = JObject.Parse(dEvent.ToString());
                 // var versionId = Int32.Parse((string)eventObject["Records"][0]["Dynamodb"]["NewImage"]["id"]["N"]);
                 // LambdaLogger.Log("Version id: " + versionId);
 
-                return await vdm.getVersion(1);
+                return await vdm.getVersion(versionId);
             }
             catch (Exception e)
             {
@@ -204,7 +223,7 @@ namespace DemoWebsocket
 
         private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
 
-        private string SerializeObject(object streamRecord)
+        private string SerializeObject(TextWriter streamRecord)
         {
             using (var ms = new MemoryStream())
             {
