@@ -156,7 +156,7 @@ namespace DemoWebsocket
                         LambdaLogger.Log($"Deleting invalid connection: {connectionId}");
                         await wsdm.deleteSubcriber(wsConnection);
                         LambdaLogger.Log(e.StackTrace);
-                        //LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}"); 
+                        //LambdaLogger.Log($"Error posting message to {connectionId}: {e.Message}");
                     }
                 }
             }
@@ -178,7 +178,7 @@ namespace DemoWebsocket
 
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
-                ServiceURL = "https://2sqw2e9fz6.execute-api.us-east-1.amazonaws.com/dev"
+                ServiceURL = "https://poun74c64b.execute-api.us-east-1.amazonaws.com/dev"
             });
             return await _broadcast(scanResponse, apiClient, stream);
         }

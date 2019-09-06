@@ -1,4 +1,9 @@
 using Amazon.Lambda.Core;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.ApiGatewayManagementApi;
+using Amazon.ApiGatewayManagementApi.Model;
+using Amazon.Runtime;
+using Amazon.Lambda.DynamoDBEvents;
 
 [assembly:LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -6,9 +11,9 @@ namespace AwsDotnetCsharp
 {
     public class Handler
     {
-       public Response Process(Request request)
+       public Response Process(APIGatewayProxyRequest request, ILambdaContext context)
        {
-           return new Response("Go Serverless v1.0! Your function executed successfully!", request);
+           return new Response("Go Serverless v1.0! Your function executed successfully!", new Request("1", "2", "3"));
        }
     }
 

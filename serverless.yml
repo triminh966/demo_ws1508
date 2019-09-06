@@ -5,7 +5,6 @@ tenant: triminh1992
 provider:
   name: aws
   runtime: dotnetcore2.1
-  VERSION_DYNAMODB_TABLE: "Version"
 
 # you can overwrite defaults here
   stage: dev
@@ -47,12 +46,18 @@ functions:
     events:
       - http:
           path: process/
-          method: get
+          method: post
   get-version:
     handler: CsharpHandlers::AWSVersion.Version::GetVersion
     events:
       - http:
-          path: version/
+          path: version/{versionId}
+          method: get
+  get-version-by-applicationId:
+    handler: CsharpHandlers::AWSVersion.Version::GetVersionByCondition
+    events:
+      - http:
+          path: version/getByCondition/{condition}
           method: get
 
   update-version:
