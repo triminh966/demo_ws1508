@@ -171,7 +171,7 @@ namespace DemoWebsocket
             var stream = new MemoryStream(UTF8Encoding.UTF8.GetBytes(JObject.FromObject(appVersion).ToString(Newtonsoft.Json.Formatting.None)));
             var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
             {
-                ServiceURL = "https://gqafvi5306.execute-api.us-east-1.amazonaws.com/dev"
+                ServiceURL = "https://2sqw2e9fz6.execute-api.us-east-1.amazonaws.com/dev"
             });
             return await _broadcast(scanResponse, apiClient, stream);
         }
